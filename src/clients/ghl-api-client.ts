@@ -6825,4 +6825,166 @@ export class GHLApiClient {
       throw error;
     }
   }
-} 
+
+  // ======================================================================
+  // FORMS API
+  // ======================================================================
+
+  async getForms(params: { locationId: string; skip?: number; limit?: number; type?: string }): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/forms/', {
+        params: {
+          locationId: params.locationId || this.config.locationId,
+          ...(params.skip !== undefined && { skip: params.skip }),
+          ...(params.limit !== undefined && { limit: params.limit }),
+          ...(params.type && { type: params.type })
+        }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getFormSubmissions(params: { locationId: string; formId?: string; startAt?: string; endAt?: string; page?: number; limit?: number; q?: string }): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/forms/submissions', {
+        params: {
+          locationId: params.locationId || this.config.locationId,
+          ...(params.formId && { formId: params.formId }),
+          ...(params.startAt && { startAt: params.startAt }),
+          ...(params.endAt && { endAt: params.endAt }),
+          ...(params.page !== undefined && { page: params.page }),
+          ...(params.limit !== undefined && { limit: params.limit }),
+          ...(params.q && { q: params.q })
+        }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ======================================================================
+  // USERS API
+  // ======================================================================
+
+  async getUsers(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/users/', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getUser(userId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/users/${userId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ======================================================================
+  // BUSINESSES API
+  // ======================================================================
+
+  async getBusinesses(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/businesses/', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getBusiness(businessId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/businesses/${businessId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createBusiness(locationId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post('/businesses/', {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data.business || response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateBusiness(businessId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.put(`/businesses/${businessId}`, data);
+      return this.wrapResponse(response.data.business || response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteBusiness(businessId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/businesses/${businessId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ======================================================================
+  // WEBHOOKS API
+  // ======================================================================
+
+  async listWebhooks(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/webhooks/', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createWebhook(locationId: string, data: { url: string; events: string[] }): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post('/webhooks/', {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateWebhook(webhookId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.put(`/webhooks/${webhookId}`, data);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteWebhook(webhookId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/webhooks/${webhookId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+}

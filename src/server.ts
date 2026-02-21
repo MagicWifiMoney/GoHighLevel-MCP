@@ -34,6 +34,11 @@ import { GHLConfig } from './types/ghl-types';
 import { ProductsTools } from './tools/products-tools.js';
 import { PaymentsTools } from './tools/payments-tools.js';
 import { InvoicesTools } from './tools/invoices-tools.js';
+import { FormsTools } from './tools/forms-tools.js';
+import { UsersTools } from './tools/users-tools.js';
+import { BusinessTools } from './tools/business-tools.js';
+import { WebhookTools } from './tools/webhook-tools.js';
+import { CompositeTools } from './tools/composite-tools.js';
 
 // Load environment variables
 dotenv.config();
@@ -63,6 +68,11 @@ class GHLMCPServer {
   private productsTools: ProductsTools;
   private paymentsTools: PaymentsTools;
   private invoicesTools: InvoicesTools;
+  private formsTools: FormsTools;
+  private usersTools: UsersTools;
+  private businessTools: BusinessTools;
+  private webhookTools: WebhookTools;
+  private compositeTools: CompositeTools;
 
   constructor() {
     // Initialize MCP server with capabilities
@@ -101,6 +111,11 @@ class GHLMCPServer {
     this.productsTools = new ProductsTools(this.ghlClient);
     this.paymentsTools = new PaymentsTools(this.ghlClient);
     this.invoicesTools = new InvoicesTools(this.ghlClient);
+    this.formsTools = new FormsTools(this.ghlClient);
+    this.usersTools = new UsersTools(this.ghlClient);
+    this.businessTools = new BusinessTools(this.ghlClient);
+    this.webhookTools = new WebhookTools(this.ghlClient);
+    this.compositeTools = new CompositeTools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupHandlers();
@@ -163,7 +178,12 @@ class GHLMCPServer {
         const productsToolDefinitions = this.productsTools.getTools();
         const paymentsToolDefinitions = this.paymentsTools.getTools();
         const invoicesToolDefinitions = this.invoicesTools.getTools();
-        
+        const formsToolDefinitions = this.formsTools.getToolDefinitions();
+        const usersToolDefinitions = this.usersTools.getToolDefinitions();
+        const businessToolDefinitions = this.businessTools.getToolDefinitions();
+        const webhookToolDefinitions = this.webhookTools.getToolDefinitions();
+        const compositeToolDefinitions = this.compositeTools.getToolDefinitions();
+
         const allTools = [
           ...contactToolDefinitions,
           ...conversationToolDefinitions,
@@ -183,7 +203,12 @@ class GHLMCPServer {
           ...storeToolDefinitions,
           ...productsToolDefinitions,
           ...paymentsToolDefinitions,
-          ...invoicesToolDefinitions
+          ...invoicesToolDefinitions,
+          ...formsToolDefinitions,
+          ...usersToolDefinitions,
+          ...businessToolDefinitions,
+          ...webhookToolDefinitions,
+          ...compositeToolDefinitions
         ];
         
         process.stderr.write(`[GHL MCP] Registered ${allTools.length} tools total:\n`);
@@ -206,6 +231,11 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${productsToolDefinitions.length} products tools\n`);
         process.stderr.write(`[GHL MCP] - ${paymentsToolDefinitions.length} payments tools\n`);
         process.stderr.write(`[GHL MCP] - ${invoicesToolDefinitions.length} invoices tools\n`);
+        process.stderr.write(`[GHL MCP] - ${formsToolDefinitions.length} forms tools\n`);
+        process.stderr.write(`[GHL MCP] - ${usersToolDefinitions.length} users tools\n`);
+        process.stderr.write(`[GHL MCP] - ${businessToolDefinitions.length} business tools\n`);
+        process.stderr.write(`[GHL MCP] - ${webhookToolDefinitions.length} webhook tools\n`);
+        process.stderr.write(`[GHL MCP] - ${compositeToolDefinitions.length} composite tools\n`);
         
         return {
           tools: allTools
@@ -268,6 +298,16 @@ class GHLMCPServer {
           result = await this.paymentsTools.handleToolCall(name, args || {});
         } else if (this.isInvoicesTool(name)) {
           result = await this.invoicesTools.handleToolCall(name, args || {});
+        } else if (this.isFormsTool(name)) {
+          result = await this.formsTools.executeTool(name, args || {});
+        } else if (this.isUsersTool(name)) {
+          result = await this.usersTools.executeTool(name, args || {});
+        } else if (this.isBusinessTool(name)) {
+          result = await this.businessTools.executeTool(name, args || {});
+        } else if (this.isWebhookTool(name)) {
+          result = await this.webhookTools.executeTool(name, args || {});
+        } else if (this.isCompositeTool(name)) {
+          result = await this.compositeTools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }
@@ -409,7 +449,7 @@ class GHLMCPServer {
       'search_location_tasks',
       // Custom Fields
       'get_location_custom_fields', 'create_location_custom_field', 'get_location_custom_field', 
-      'update_location_custom_field', 'delete_location_custom_field',
+      'update_location_custom_field', 'delete_location_custom_field', 'list_contact_field_folders',
       // Custom Values
       'get_location_custom_values', 'create_location_custom_value', 'get_location_custom_value',
       'update_location_custom_value', 'delete_location_custom_value',
@@ -599,6 +639,50 @@ class GHLMCPServer {
   }
 
 
+
+  /**
+   * Check if tool name belongs to forms tools
+   */
+  private isFormsTool(toolName: string): boolean {
+    const formsToolNames = ['get_forms', 'get_form_submissions'];
+    return formsToolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to users tools
+   */
+  private isUsersTool(toolName: string): boolean {
+    const usersToolNames = ['get_users', 'get_user'];
+    return usersToolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to business tools
+   */
+  private isBusinessTool(toolName: string): boolean {
+    const businessToolNames = ['get_businesses', 'get_business', 'create_business', 'update_business', 'delete_business'];
+    return businessToolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to webhook tools
+   */
+  private isWebhookTool(toolName: string): boolean {
+    const webhookToolNames = ['list_webhooks', 'create_webhook', 'update_webhook', 'delete_webhook'];
+    return webhookToolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to composite tools
+   */
+  private isCompositeTool(toolName: string): boolean {
+    const compositeToolNames = [
+      'ghl_composite_intake_prospect', 'ghl_composite_full_contact_setup',
+      'ghl_composite_pipeline_report', 'ghl_composite_renewal_dashboard',
+      'ghl_composite_bulk_field_update'
+    ];
+    return compositeToolNames.includes(toolName);
+  }
 
   /**
    * Test GHL API connection

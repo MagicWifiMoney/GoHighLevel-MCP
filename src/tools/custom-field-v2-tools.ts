@@ -111,7 +111,7 @@ export class CustomFieldV2Tools {
               description: 'ID of the parent folder for organization'
             }
           },
-          required: ['dataType', 'fieldKey', 'objectKey', 'parentId']
+          required: ['dataType', 'fieldKey', 'objectKey']
         }
       },
       {
@@ -214,7 +214,7 @@ export class CustomFieldV2Tools {
       // Custom Field Folder Management Tools
       {
         name: 'ghl_create_custom_field_folder',
-        description: 'Create a new custom field folder for organizing fields within an object.',
+        description: 'Create a new custom field folder for organizing fields. NOTE: This only works for custom objects (e.g. custom_object.pet), NOT for contact/opportunity fields. Contact field folders can only be created in the GHL UI.',
         inputSchema: {
           type: 'object',
           properties: {

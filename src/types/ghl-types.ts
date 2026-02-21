@@ -420,10 +420,24 @@ export interface GHLFollowersResponse {
 export interface MCPCreateContactParams {
   firstName?: string;
   lastName?: string;
+  name?: string;
   email: string;
   phone?: string;
+  address1?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  website?: string;
+  timezone?: string;
+  companyName?: string;
   tags?: string[];
   source?: string;
+  assignedTo?: string;
+  dateOfBirth?: string;
+  dnd?: boolean;
+  dndSettings?: GHLDndSettings;
+  customFields?: Array<{ id: string; key?: string; field_value: string | string[] | object }>;
 }
 
 export interface MCPSearchContactsParams {
@@ -437,9 +451,24 @@ export interface MCPUpdateContactParams {
   contactId: string;
   firstName?: string;
   lastName?: string;
+  name?: string;
   email?: string;
   phone?: string;
+  address1?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  website?: string;
+  timezone?: string;
+  companyName?: string;
   tags?: string[];
+  source?: string;
+  assignedTo?: string;
+  dateOfBirth?: string;
+  dnd?: boolean;
+  dndSettings?: GHLDndSettings;
+  customFields?: Array<{ id: string; key?: string; field_value: string | string[] | object }>;
 }
 
 export interface MCPAddContactTagsParams {
@@ -527,7 +556,7 @@ export interface MCPUpsertContactParams {
   name?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  address1?: string;
   city?: string;
   state?: string;
   country?: string;
@@ -536,9 +565,12 @@ export interface MCPUpsertContactParams {
   timezone?: string;
   companyName?: string;
   tags?: string[];
-  customFields?: GHLCustomField[];
   source?: string;
   assignedTo?: string;
+  dateOfBirth?: string;
+  dnd?: boolean;
+  dndSettings?: GHLDndSettings;
+  customFields?: GHLCustomField[];
 }
 
 export interface MCPGetDuplicateContactParams {
@@ -1747,6 +1779,8 @@ export interface GHLCreateCustomFieldRequest {
   textBoxListOptions?: GHLCustomFieldTextBoxOption[];
   position?: number;
   model?: 'contact' | 'opportunity';
+  options?: string[];
+  parentId?: string;
 }
 
 // Update Custom Field Request
@@ -1965,6 +1999,8 @@ export interface MCPCreateCustomFieldParams {
   textBoxListOptions?: GHLCustomFieldTextBoxOption[];
   position?: number;
   model?: 'contact' | 'opportunity';
+  options?: string[];
+  parentId?: string;
 }
 
 export interface MCPGetCustomFieldParams {
@@ -3805,7 +3841,7 @@ export interface GHLV2CreateCustomFieldRequest {
   objectKey: string;
   maxFileLimit?: number;
   allowCustomOption?: boolean;
-  parentId: string;
+  parentId?: string;
 }
 
 export interface GHLV2UpdateCustomFieldRequest {
@@ -3877,7 +3913,7 @@ export interface MCPV2CreateCustomFieldParams {
   objectKey: string;
   maxFileLimit?: number;
   allowCustomOption?: boolean;
-  parentId: string;
+  parentId?: string;
 }
 
 export interface MCPV2UpdateCustomFieldParams {

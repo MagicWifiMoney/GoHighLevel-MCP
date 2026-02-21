@@ -95,7 +95,7 @@ export class OpportunityTools {
       },
       {
         name: 'create_opportunity',
-        description: 'Create a new opportunity in GoHighLevel CRM',
+        description: 'Create a new opportunity in GoHighLevel CRM. Use pipelineStageId to control which stage the opportunity lands in.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -106,6 +106,10 @@ export class OpportunityTools {
             pipelineId: {
               type: 'string',
               description: 'ID of the pipeline this opportunity belongs to'
+            },
+            pipelineStageId: {
+              type: 'string',
+              description: 'ID of the pipeline stage to place this opportunity in (critical — without this, opp lands in first stage)'
             },
             contactId: {
               type: 'string',
@@ -124,6 +128,19 @@ export class OpportunityTools {
             assignedTo: {
               type: 'string',
               description: 'User ID to assign this opportunity to'
+            },
+            customFields: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', description: 'Custom field ID' },
+                  key: { type: 'string', description: 'Custom field key (alternative to id)' },
+                  field_value: { oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }, { type: 'object' }] }
+                },
+                required: ['field_value']
+              },
+              description: 'Custom field values as array of {id, field_value} or {key, field_value}'
             }
           },
           required: ['name', 'pipelineId', 'contactId']
@@ -164,7 +181,7 @@ export class OpportunityTools {
       },
       {
         name: 'update_opportunity',
-        description: 'Update an existing opportunity with new details (full update)',
+        description: 'Update an existing opportunity with new details including stage, value, and custom fields',
         inputSchema: {
           type: 'object',
           properties: {
@@ -182,7 +199,7 @@ export class OpportunityTools {
             },
             pipelineStageId: {
               type: 'string',
-              description: 'Updated pipeline stage ID'
+              description: 'Updated pipeline stage ID (move opp to different stage)'
             },
             status: {
               type: 'string',
@@ -196,6 +213,19 @@ export class OpportunityTools {
             assignedTo: {
               type: 'string',
               description: 'Updated assigned user ID'
+            },
+            customFields: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', description: 'Custom field ID' },
+                  key: { type: 'string', description: 'Custom field key (alternative to id)' },
+                  field_value: { oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }, { type: 'object' }] }
+                },
+                required: ['field_value']
+              },
+              description: 'Custom field values as array of {id, field_value} or {key, field_value}'
             }
           },
           required: ['opportunityId']
@@ -519,6 +549,7 @@ export class OpportunityTools {
       if (params.status) updateData.status = params.status;
       if (params.monetaryValue !== undefined) updateData.monetaryValue = params.monetaryValue;
       if (params.assignedTo) updateData.assignedTo = params.assignedTo;
+      if (params.customFields) updateData.customFields = params.customFields;
 
       const response = await this.ghlClient.updateOpportunity(params.opportunityId, updateData);
       

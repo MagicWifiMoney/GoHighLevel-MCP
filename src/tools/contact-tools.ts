@@ -69,16 +69,30 @@ export class ContactTools {
       // Basic Contact Management
       {
         name: 'create_contact',
-        description: 'Create a new contact in GoHighLevel',
+        description: 'Create a new contact in GoHighLevel with full field support including address, custom fields, DND settings, and assignment',
         inputSchema: {
           type: 'object',
           properties: {
             firstName: { type: 'string', description: 'Contact first name' },
             lastName: { type: 'string', description: 'Contact last name' },
+            name: { type: 'string', description: 'Full name (alternative to firstName/lastName)' },
             email: { type: 'string', description: 'Contact email address' },
             phone: { type: 'string', description: 'Contact phone number' },
+            address1: { type: 'string', description: 'Street address' },
+            city: { type: 'string', description: 'City' },
+            state: { type: 'string', description: 'State/province' },
+            country: { type: 'string', description: 'Country (2-letter code, e.g. US)' },
+            postalCode: { type: 'string', description: 'Postal/ZIP code' },
+            website: { type: 'string', description: 'Website URL' },
+            timezone: { type: 'string', description: 'Timezone (e.g. America/New_York)' },
+            companyName: { type: 'string', description: 'Company/business name' },
             tags: { type: 'array', items: { type: 'string' }, description: 'Tags to assign to contact' },
-            source: { type: 'string', description: 'Source of the contact' }
+            source: { type: 'string', description: 'Source of the contact' },
+            assignedTo: { type: 'string', description: 'User ID to assign contact to' },
+            dateOfBirth: { type: 'string', description: 'Date of birth (YYYY-MM-DD)' },
+            dnd: { type: 'boolean', description: 'Global Do Not Disturb flag' },
+            dndSettings: { type: 'object', description: 'Per-channel DND settings (Call, Email, SMS, WhatsApp, GMB, FB)', properties: { Call: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, Email: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, SMS: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, WhatsApp: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, GMB: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, FB: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] } } },
+            customFields: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, key: { type: 'string' }, field_value: { oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }, { type: 'object' }] } }, required: ['id', 'field_value'] }, description: 'Custom field values as array of {id, field_value} or {key, field_value}' }
           },
           required: ['email']
         }
@@ -109,16 +123,31 @@ export class ContactTools {
       },
       {
         name: 'update_contact',
-        description: 'Update contact information',
+        description: 'Update contact information including address, custom fields, DND settings, and assignment',
         inputSchema: {
           type: 'object',
           properties: {
             contactId: { type: 'string', description: 'Contact ID' },
             firstName: { type: 'string', description: 'Contact first name' },
             lastName: { type: 'string', description: 'Contact last name' },
+            name: { type: 'string', description: 'Full name (alternative to firstName/lastName)' },
             email: { type: 'string', description: 'Contact email address' },
             phone: { type: 'string', description: 'Contact phone number' },
-            tags: { type: 'array', items: { type: 'string' }, description: 'Tags to assign to contact' }
+            address1: { type: 'string', description: 'Street address' },
+            city: { type: 'string', description: 'City' },
+            state: { type: 'string', description: 'State/province' },
+            country: { type: 'string', description: 'Country (2-letter code, e.g. US)' },
+            postalCode: { type: 'string', description: 'Postal/ZIP code' },
+            website: { type: 'string', description: 'Website URL' },
+            timezone: { type: 'string', description: 'Timezone (e.g. America/New_York)' },
+            companyName: { type: 'string', description: 'Company/business name' },
+            tags: { type: 'array', items: { type: 'string' }, description: 'Tags to assign to contact' },
+            source: { type: 'string', description: 'Source of the contact' },
+            assignedTo: { type: 'string', description: 'User ID to assign contact to' },
+            dateOfBirth: { type: 'string', description: 'Date of birth (YYYY-MM-DD)' },
+            dnd: { type: 'boolean', description: 'Global Do Not Disturb flag' },
+            dndSettings: { type: 'object', description: 'Per-channel DND settings (Call, Email, SMS, WhatsApp, GMB, FB)', properties: { Call: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, Email: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, SMS: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, WhatsApp: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, GMB: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, FB: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] } } },
+            customFields: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, key: { type: 'string' }, field_value: { oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }, { type: 'object' }] } }, required: ['id', 'field_value'] }, description: 'Custom field values as array of {id, field_value} or {key, field_value}' }
           },
           required: ['contactId']
         }
@@ -309,17 +338,30 @@ export class ContactTools {
       // Advanced Contact Operations
       {
         name: 'upsert_contact',
-        description: 'Create or update contact based on email/phone (smart merge)',
+        description: 'Create or update contact based on email/phone match (smart merge). Supports all contact fields including address, custom fields, DND, and assignment.',
         inputSchema: {
           type: 'object',
           properties: {
             firstName: { type: 'string', description: 'Contact first name' },
             lastName: { type: 'string', description: 'Contact last name' },
-            email: { type: 'string', description: 'Contact email address' },
-            phone: { type: 'string', description: 'Contact phone number' },
+            name: { type: 'string', description: 'Full name (alternative to firstName/lastName)' },
+            email: { type: 'string', description: 'Contact email address (used for matching)' },
+            phone: { type: 'string', description: 'Contact phone number (used for matching)' },
+            address1: { type: 'string', description: 'Street address' },
+            city: { type: 'string', description: 'City' },
+            state: { type: 'string', description: 'State/province' },
+            country: { type: 'string', description: 'Country (2-letter code, e.g. US)' },
+            postalCode: { type: 'string', description: 'Postal/ZIP code' },
+            website: { type: 'string', description: 'Website URL' },
+            timezone: { type: 'string', description: 'Timezone (e.g. America/New_York)' },
+            companyName: { type: 'string', description: 'Company/business name' },
             tags: { type: 'array', items: { type: 'string' }, description: 'Tags to assign to contact' },
             source: { type: 'string', description: 'Source of the contact' },
-            assignedTo: { type: 'string', description: 'User ID to assign contact to' }
+            assignedTo: { type: 'string', description: 'User ID to assign contact to' },
+            dateOfBirth: { type: 'string', description: 'Date of birth (YYYY-MM-DD)' },
+            dnd: { type: 'boolean', description: 'Global Do Not Disturb flag' },
+            dndSettings: { type: 'object', description: 'Per-channel DND settings (Call, Email, SMS, WhatsApp, GMB, FB)', properties: { Call: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, Email: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, SMS: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, WhatsApp: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, GMB: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] }, FB: { type: 'object', properties: { status: { type: 'string', enum: ['active', 'inactive', 'permanent'] }, message: { type: 'string' } }, required: ['status'] } } },
+            customFields: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, key: { type: 'string' }, field_value: { oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }, { type: 'object' }] } }, required: ['id', 'field_value'] }, description: 'Custom field values as array of {id, field_value} or {key, field_value}' }
           }
         }
       },
@@ -582,10 +624,23 @@ export class ContactTools {
         locationId: this.ghlClient.getConfig().locationId,
         firstName: params.firstName,
         lastName: params.lastName,
+        name: params.name,
         email: params.email,
         phone: params.phone,
+        address1: params.address1,
+        city: params.city,
+        state: params.state,
+        country: params.country,
+        postalCode: params.postalCode,
+        website: params.website,
+        timezone: params.timezone,
+        companyName: params.companyName,
         tags: params.tags,
-      source: params.source
+        source: params.source,
+        assignedTo: params.assignedTo,
+        dnd: params.dnd,
+        dndSettings: params.dndSettings as any,
+        customFields: params.customFields as any
     });
 
     if (!response.success) {
@@ -627,9 +682,23 @@ export class ContactTools {
     const response = await this.ghlClient.updateContact(params.contactId, {
       firstName: params.firstName,
       lastName: params.lastName,
+      name: params.name,
       email: params.email,
       phone: params.phone,
-      tags: params.tags
+      address1: params.address1,
+      city: params.city,
+      state: params.state,
+      country: params.country,
+      postalCode: params.postalCode,
+      website: params.website,
+      timezone: params.timezone,
+      companyName: params.companyName,
+      tags: params.tags,
+      source: params.source,
+      assignedTo: params.assignedTo,
+      dnd: params.dnd,
+      dndSettings: params.dndSettings as any,
+      customFields: params.customFields as any
     });
 
     if (!response.success) {
@@ -808,7 +877,7 @@ export class ContactTools {
       name: params.name,
       email: params.email,
       phone: params.phone,
-      address1: params.address,
+      address1: params.address1,
       city: params.city,
       state: params.state,
       country: params.country,
@@ -819,7 +888,9 @@ export class ContactTools {
       tags: params.tags,
       customFields: params.customFields,
       source: params.source,
-      assignedTo: params.assignedTo
+      assignedTo: params.assignedTo,
+      dnd: params.dnd,
+      dndSettings: params.dndSettings as any
     });
 
     if (!response.success) {

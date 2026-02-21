@@ -398,7 +398,7 @@ export class LocationTools {
       },
       {
         name: 'create_location_custom_field',
-        description: 'Create a new custom field for a location',
+        description: 'Create a new custom field for a location. Use parentId to place the field in an existing folder (folders must be created in GHL UI for contact/opportunity fields). Use get_location_custom_fields to discover existing folder IDs.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -428,6 +428,15 @@ export class LocationTools {
               type: 'number',
               description: 'Position/order of the field (default: 0)',
               default: 0
+            },
+            options: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Picklist options for SINGLE_OPTIONS, MULTIPLE_OPTIONS, or CHECKBOX fields'
+            },
+            parentId: {
+              type: 'string',
+              description: 'ID of the parent folder/group to organize the field under'
             }
           },
           required: ['locationId', 'name', 'dataType']
@@ -453,7 +462,7 @@ export class LocationTools {
       },
       {
         name: 'update_location_custom_field',
-        description: 'Update an existing custom field',
+        description: 'Update an existing custom field including name, options (for dropdowns), placeholder, and position',
         inputSchema: {
           type: 'object',
           properties: {
@@ -469,9 +478,18 @@ export class LocationTools {
               type: 'string',
               description: 'Updated name of the custom field'
             },
+            dataType: {
+              type: 'string',
+              description: 'Data type of the field (TEXT, NUMBER, DATE, SINGLE_OPTIONS, MULTIPLE_OPTIONS, CHECKBOX, etc.)'
+            },
             placeholder: {
               type: 'string',
               description: 'Updated placeholder text'
+            },
+            options: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Updated picklist options for SINGLE_OPTIONS, MULTIPLE_OPTIONS, or CHECKBOX fields (replaces all existing options)'
             },
             position: {
               type: 'number',
@@ -658,6 +676,28 @@ export class LocationTools {
         }
       },
 
+      // Contact Field Folders Utility
+      {
+        name: 'list_contact_field_folders',
+        description: 'List existing custom field folders for contacts (or opportunities). Returns folder IDs and names so you can reference them when creating new fields with parentId. Note: contact folders can only be created in the GHL UI.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            locationId: {
+              type: 'string',
+              description: 'The location ID'
+            },
+            model: {
+              type: 'string',
+              enum: ['contact', 'opportunity', 'all'],
+              description: 'Filter by model type (default: contact)',
+              default: 'contact'
+            }
+          },
+          required: ['locationId']
+        }
+      },
+
       // Timezones Tool
       {
         name: 'get_timezones',
@@ -731,6 +771,10 @@ export class LocationTools {
         return this.updateLocationCustomValue(args as MCPUpdateCustomValueParams);
       case 'delete_location_custom_value':
         return this.deleteLocationCustomValue(args as MCPDeleteCustomValueParams);
+
+      // Contact Field Folders
+      case 'list_contact_field_folders':
+        return this.listContactFieldFolders(args);
 
       // Templates
       case 'get_location_templates':
@@ -1108,6 +1152,45 @@ export class LocationTools {
       };
     } catch (error) {
       throw new Error(`Failed to delete custom value: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  private async listContactFieldFolders(params: any): Promise<{ success: boolean; folders: any[]; message: string }> {
+    try {
+      const model = params.model || 'contact';
+      const response = await this.ghlClient.getLocationCustomFields(params.locationId, model);
+      if (!response.success || !response.data) {
+        const errorMsg = response.error?.message || 'Unknown API error';
+        throw new Error(`API request failed: ${errorMsg}`);
+      }
+      const customFields: any[] = response.data.customFields || [];
+
+      // Extract unique folders from custom fields
+      // The GHL API returns fields with parentId referencing folders,
+      // and folder entries may have isFolder=true or type='folder'
+      const folderMap = new Map<string, string>();
+      for (const field of customFields) {
+        if (field.isFolder || field.type === 'folder') {
+          folderMap.set(field.id, field.name);
+        }
+      }
+
+      // Also extract parentId references from non-folder fields
+      for (const field of customFields) {
+        if (field.parentId && !folderMap.has(field.parentId)) {
+          folderMap.set(field.parentId, field.parentName || `Folder ${field.parentId}`);
+        }
+      }
+
+      const folders = Array.from(folderMap.entries()).map(([id, name]) => ({ id, name }));
+
+      return {
+        success: true,
+        folders,
+        message: `Found ${folders.length} custom field folder(s) for ${model} fields`
+      };
+    } catch (error) {
+      throw new Error(`Failed to list field folders: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
