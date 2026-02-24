@@ -389,11 +389,12 @@ import {
  */
 export class GHLApiClient {
   private axiosInstance: AxiosInstance;
+  private agencyAxiosInstance: AxiosInstance | null = null;
   private config: GHLConfig;
 
   constructor(config: GHLConfig) {
     this.config = config;
-    
+
     // Create axios instance with base configuration
     this.axiosInstance = axios.create({
       baseURL: config.baseUrl,
@@ -433,6 +434,55 @@ export class GHLApiClient {
         return Promise.reject(this.handleApiError(error));
       }
     );
+
+    // Create agency axios instance if agency token provided
+    if (config.agencyAccessToken) {
+      this.agencyAxiosInstance = axios.create({
+        baseURL: config.baseUrl,
+        headers: {
+          'Authorization': `Bearer ${config.agencyAccessToken}`,
+          'Version': config.version,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        timeout: 30000
+      });
+
+      this.agencyAxiosInstance.interceptors.request.use(
+        (config) => {
+          process.stderr.write(`[GHL API Agency] ${config.method?.toUpperCase()} ${config.url}\n`);
+          return config;
+        },
+        (error) => {
+          console.error('[GHL API Agency] Request error:', error);
+          return Promise.reject(error);
+        }
+      );
+
+      this.agencyAxiosInstance.interceptors.response.use(
+        (response) => {
+          process.stderr.write(`[GHL API Agency] Response ${response.status}: ${response.config.url}\n`);
+          return response;
+        },
+        (error: AxiosError<GHLErrorResponse>) => {
+          console.error('[GHL API Agency] Response error:', {
+            status: error.response?.status,
+            message: error.response?.data?.message,
+            url: error.config?.url
+          });
+          return Promise.reject(this.handleApiError(error));
+        }
+      );
+
+      process.stderr.write('[GHL API] Agency token configured\n');
+    }
+  }
+
+  /**
+   * Get the agency axios instance, falling back to sub-account instance
+   */
+  getAgencyClient(): AxiosInstance {
+    return this.agencyAxiosInstance || this.axiosInstance;
   }
 
   /**
@@ -2280,7 +2330,8 @@ export class GHLApiClient {
    */
   async createLocation(locationData: GHLCreateLocationRequest): Promise<GHLApiResponse<GHLLocationDetailed>> {
     try {
-      const response: AxiosResponse<GHLLocationDetailed> = await this.axiosInstance.post(
+      const client = this.getAgencyClient();
+      const response: AxiosResponse<GHLLocationDetailed> = await client.post(
         '/locations/',
         locationData
       );
@@ -2297,7 +2348,8 @@ export class GHLApiClient {
    */
   async updateLocation(locationId: string, updates: GHLUpdateLocationRequest): Promise<GHLApiResponse<GHLLocationDetailed>> {
     try {
-      const response: AxiosResponse<GHLLocationDetailed> = await this.axiosInstance.put(
+      const client = this.getAgencyClient();
+      const response: AxiosResponse<GHLLocationDetailed> = await client.put(
         `/locations/${locationId}`,
         updates
       );
@@ -2314,7 +2366,8 @@ export class GHLApiClient {
    */
   async deleteLocation(locationId: string, deleteTwilioAccount: boolean): Promise<GHLApiResponse<GHLLocationDeleteResponse>> {
     try {
-      const response: AxiosResponse<GHLLocationDeleteResponse> = await this.axiosInstance.delete(
+      const client = this.getAgencyClient();
+      const response: AxiosResponse<GHLLocationDeleteResponse> = await client.delete(
         `/locations/${locationId}`,
         {
           params: { deleteTwilioAccount }
@@ -6982,6 +7035,507 @@ export class GHLApiClient {
   async deleteWebhook(webhookId: string): Promise<GHLApiResponse<any>> {
     try {
       const response: AxiosResponse = await this.axiosInstance.delete(`/webhooks/${webhookId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // CONVERSATION AI API METHODS
+  // ============================================================
+
+  async listConversationAIAgents(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/conversations/ai/agents', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getConversationAIAgent(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/conversations/ai/agents/${agentId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createConversationAIAgent(data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post('/conversations/ai/agents', {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateConversationAIAgent(agentId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.put(`/conversations/ai/agents/${agentId}`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteConversationAIAgent(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/conversations/ai/agents/${agentId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async listConversationAIActions(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/conversations/ai/agents/${agentId}/actions`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async attachConversationAIAction(agentId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post(`/conversations/ai/agents/${agentId}/actions`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getConversationAIAction(agentId: string, actionId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/conversations/ai/agents/${agentId}/actions/${actionId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateConversationAIAction(agentId: string, actionId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.put(`/conversations/ai/agents/${agentId}/actions/${actionId}`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteConversationAIAction(agentId: string, actionId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/conversations/ai/agents/${agentId}/actions/${actionId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getConversationAIGeneration(generationId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/conversations/ai/generations/${generationId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // KNOWLEDGE BASE API METHODS
+  // ============================================================
+
+  async listKnowledgeBases(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/knowledge-bases/', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getKnowledgeBase(kbId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/knowledge-bases/${kbId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createKnowledgeBase(data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post('/knowledge-bases/', {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateKnowledgeBase(kbId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.put(`/knowledge-bases/${kbId}`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteKnowledgeBase(kbId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/knowledge-bases/${kbId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async listKnowledgeBaseFAQs(kbId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/knowledge-bases/${kbId}/faqs`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createKnowledgeBaseFAQ(kbId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post(`/knowledge-bases/${kbId}/faqs`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateKnowledgeBaseFAQ(kbId: string, faqId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.put(`/knowledge-bases/${kbId}/faqs/${faqId}`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteKnowledgeBaseFAQ(kbId: string, faqId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/knowledge-bases/${kbId}/faqs/${faqId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // AGENT STUDIO API METHODS
+  // ============================================================
+
+  async listAgentStudioAgents(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/agent-studio/agents', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getAgentStudioAgent(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/agent-studio/agents/${agentId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createAgentStudioAction(agentId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post(`/agent-studio/agents/${agentId}/actions`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // DOCUMENTS & CONTRACTS API METHODS
+  // ============================================================
+
+  async listDocuments(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/documents/', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getDocument(docId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/documents/${docId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async sendDocument(docId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post(`/documents/${docId}/send`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async listDocumentTemplates(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/documents/templates/', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getDocumentTemplate(templateId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/documents/templates/${templateId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async sendDocumentTemplate(templateId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post(`/documents/templates/${templateId}/send`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // VOICE AI API METHODS
+  // ============================================================
+
+  async listVoiceAIAgents(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/voice-ai/agents', {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getVoiceAIAgent(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/voice-ai/agents/${agentId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createVoiceAIAgent(data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post('/voice-ai/agents', {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateVoiceAIAgent(agentId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.patch(`/voice-ai/agents/${agentId}`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteVoiceAIAgent(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/voice-ai/agents/${agentId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async listVoiceAIActions(agentId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/voice-ai/agents/${agentId}/actions`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createVoiceAIAction(agentId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.post(`/voice-ai/agents/${agentId}/actions`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateVoiceAIAction(agentId: string, actionId: string, data: any, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.patch(`/voice-ai/agents/${agentId}/actions/${actionId}`, {
+        ...data,
+        locationId: locationId || this.config.locationId
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteVoiceAIAction(agentId: string, actionId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/voice-ai/agents/${agentId}/actions/${actionId}`, {
+        params: { locationId: locationId || this.config.locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getVoiceAICallLogs(locationId: string, params?: { agentId?: string; limit?: number; offset?: number }): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/voice-ai/calls', {
+        params: {
+          locationId: locationId || this.config.locationId,
+          ...params
+        }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // AGENCY-SCOPED LOCATION METHODS
+  // ============================================================
+
+  async createLocationAgency(data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.post('/locations/', data);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateLocationAgency(locationId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.put(`/locations/${locationId}`, data);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteLocationAgency(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.delete(`/locations/${locationId}`);
       return this.wrapResponse(response.data);
     } catch (error) {
       throw this.handleApiError(error as AxiosError<GHLErrorResponse>);

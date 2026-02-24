@@ -39,6 +39,11 @@ import { UsersTools } from './tools/users-tools.js';
 import { BusinessTools } from './tools/business-tools.js';
 import { WebhookTools } from './tools/webhook-tools.js';
 import { CompositeTools } from './tools/composite-tools.js';
+import { ConversationAITools } from './tools/conversation-ai-tools.js';
+import { KnowledgeBaseTools } from './tools/knowledge-base-tools.js';
+import { AgentStudioTools } from './tools/agent-studio-tools.js';
+import { DocumentTools } from './tools/document-tools.js';
+import { VoiceAITools } from './tools/voice-ai-tools.js';
 
 // Load environment variables
 dotenv.config();
@@ -73,6 +78,11 @@ class GHLMCPServer {
   private businessTools: BusinessTools;
   private webhookTools: WebhookTools;
   private compositeTools: CompositeTools;
+  private conversationAITools: ConversationAITools;
+  private knowledgeBaseTools: KnowledgeBaseTools;
+  private agentStudioTools: AgentStudioTools;
+  private documentTools: DocumentTools;
+  private voiceAITools: VoiceAITools;
 
   constructor() {
     // Initialize MCP server with capabilities
@@ -116,6 +126,11 @@ class GHLMCPServer {
     this.businessTools = new BusinessTools(this.ghlClient);
     this.webhookTools = new WebhookTools(this.ghlClient);
     this.compositeTools = new CompositeTools(this.ghlClient);
+    this.conversationAITools = new ConversationAITools(this.ghlClient);
+    this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
+    this.agentStudioTools = new AgentStudioTools(this.ghlClient);
+    this.documentTools = new DocumentTools(this.ghlClient);
+    this.voiceAITools = new VoiceAITools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupHandlers();
@@ -130,7 +145,8 @@ class GHLMCPServer {
       accessToken: process.env.GHL_API_KEY || '',
       baseUrl: process.env.GHL_BASE_URL || 'https://services.leadconnectorhq.com',
       version: '2021-07-28',
-      locationId: process.env.GHL_LOCATION_ID || ''
+      locationId: process.env.GHL_LOCATION_ID || '',
+      agencyAccessToken: process.env.GHL_AGENCY_API_KEY || undefined
     };
 
     // Validate required configuration
@@ -146,6 +162,9 @@ class GHLMCPServer {
     process.stderr.write(`[GHL MCP] Base URL: ${config.baseUrl}\n`);
     process.stderr.write(`[GHL MCP] Version: ${config.version}\n`);
     process.stderr.write(`[GHL MCP] Location ID: ${config.locationId}\n`);
+    if (config.agencyAccessToken) {
+      process.stderr.write('[GHL MCP] Agency token: configured\n');
+    }
 
     return new GHLApiClient(config);
   }
@@ -183,6 +202,11 @@ class GHLMCPServer {
         const businessToolDefinitions = this.businessTools.getToolDefinitions();
         const webhookToolDefinitions = this.webhookTools.getToolDefinitions();
         const compositeToolDefinitions = this.compositeTools.getToolDefinitions();
+        const conversationAIToolDefinitions = this.conversationAITools.getToolDefinitions();
+        const knowledgeBaseToolDefinitions = this.knowledgeBaseTools.getToolDefinitions();
+        const agentStudioToolDefinitions = this.agentStudioTools.getToolDefinitions();
+        const documentToolDefinitions = this.documentTools.getToolDefinitions();
+        const voiceAIToolDefinitions = this.voiceAITools.getToolDefinitions();
 
         const allTools = [
           ...contactToolDefinitions,
@@ -208,7 +232,12 @@ class GHLMCPServer {
           ...usersToolDefinitions,
           ...businessToolDefinitions,
           ...webhookToolDefinitions,
-          ...compositeToolDefinitions
+          ...compositeToolDefinitions,
+          ...conversationAIToolDefinitions,
+          ...knowledgeBaseToolDefinitions,
+          ...agentStudioToolDefinitions,
+          ...documentToolDefinitions,
+          ...voiceAIToolDefinitions
         ];
         
         process.stderr.write(`[GHL MCP] Registered ${allTools.length} tools total:\n`);
@@ -236,6 +265,11 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${businessToolDefinitions.length} business tools\n`);
         process.stderr.write(`[GHL MCP] - ${webhookToolDefinitions.length} webhook tools\n`);
         process.stderr.write(`[GHL MCP] - ${compositeToolDefinitions.length} composite tools\n`);
+        process.stderr.write(`[GHL MCP] - ${conversationAIToolDefinitions.length} conversation AI tools\n`);
+        process.stderr.write(`[GHL MCP] - ${knowledgeBaseToolDefinitions.length} knowledge base tools\n`);
+        process.stderr.write(`[GHL MCP] - ${agentStudioToolDefinitions.length} agent studio tools\n`);
+        process.stderr.write(`[GHL MCP] - ${documentToolDefinitions.length} document tools\n`);
+        process.stderr.write(`[GHL MCP] - ${voiceAIToolDefinitions.length} voice AI tools\n`);
         
         return {
           tools: allTools
@@ -308,6 +342,16 @@ class GHLMCPServer {
           result = await this.webhookTools.executeTool(name, args || {});
         } else if (this.isCompositeTool(name)) {
           result = await this.compositeTools.executeTool(name, args || {});
+        } else if (this.isConversationAITool(name)) {
+          result = await this.conversationAITools.executeTool(name, args || {});
+        } else if (this.isKnowledgeBaseTool(name)) {
+          result = await this.knowledgeBaseTools.executeTool(name, args || {});
+        } else if (this.isAgentStudioTool(name)) {
+          result = await this.agentStudioTools.executeTool(name, args || {});
+        } else if (this.isDocumentTool(name)) {
+          result = await this.documentTools.executeTool(name, args || {});
+        } else if (this.isVoiceAITool(name)) {
+          result = await this.voiceAITools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }
@@ -682,6 +726,41 @@ class GHLMCPServer {
       'ghl_composite_bulk_field_update'
     ];
     return compositeToolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to conversation AI tools
+   */
+  private isConversationAITool(toolName: string): boolean {
+    return ConversationAITools.toolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to knowledge base tools
+   */
+  private isKnowledgeBaseTool(toolName: string): boolean {
+    return KnowledgeBaseTools.toolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to agent studio tools
+   */
+  private isAgentStudioTool(toolName: string): boolean {
+    return AgentStudioTools.toolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to document tools
+   */
+  private isDocumentTool(toolName: string): boolean {
+    return DocumentTools.toolNames.includes(toolName);
+  }
+
+  /**
+   * Check if tool name belongs to voice AI tools
+   */
+  private isVoiceAITool(toolName: string): boolean {
+    return VoiceAITools.toolNames.includes(toolName);
   }
 
   /**

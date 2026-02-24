@@ -9,6 +9,7 @@ export interface GHLConfig {
   baseUrl: string;
   version: string;
   locationId: string;
+  agencyAccessToken?: string;
 }
 
 // OAuth Token Response
@@ -6722,3 +6723,171 @@ export interface CreateInvoiceResponseDto extends DefaultInvoiceResponseDto {}
 export interface UpdateInvoiceResponseDto extends DefaultInvoiceResponseDto {}
 export interface DeleteInvoiceResponseDto extends DefaultInvoiceResponseDto {}
 export interface VoidInvoiceResponseDto extends DefaultInvoiceResponseDto {}
+
+// ============================================================
+// CONVERSATION AI TYPES
+// ============================================================
+
+export interface GHLConversationAIAgent {
+  id?: string;
+  locationId?: string;
+  name: string;
+  businessName?: string;
+  mode?: 'autopilot' | 'suggestive';
+  channels?: string[];
+  isPrimary?: boolean;
+  personality?: {
+    tone?: string;
+    greeting?: string;
+  };
+  goal?: string;
+  status?: string;
+  knowledgeBaseIds?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLConversationAIAction {
+  id?: string;
+  agentId?: string;
+  name?: string;
+  type?: string;
+  description?: string;
+  config?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLConversationAIGeneration {
+  id?: string;
+  conversationId?: string;
+  contactId?: string;
+  agentId?: string;
+  message?: string;
+  status?: string;
+  createdAt?: string;
+  [key: string]: any;
+}
+
+// ============================================================
+// KNOWLEDGE BASE TYPES
+// ============================================================
+
+export interface GHLKnowledgeBase {
+  id?: string;
+  locationId?: string;
+  name: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLKnowledgeBaseFAQ {
+  id?: string;
+  knowledgeBaseId?: string;
+  question: string;
+  answer: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+// ============================================================
+// AGENT STUDIO TYPES
+// ============================================================
+
+export interface GHLAgentStudioAgent {
+  id?: string;
+  locationId?: string;
+  name?: string;
+  type?: string;
+  status?: string;
+  config?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLAgentStudioAction {
+  id?: string;
+  agentId?: string;
+  name?: string;
+  type?: string;
+  config?: Record<string, any>;
+  [key: string]: any;
+}
+
+// ============================================================
+// DOCUMENTS & CONTRACTS TYPES
+// ============================================================
+
+export interface GHLDocument {
+  id?: string;
+  locationId?: string;
+  name?: string;
+  type?: string;
+  status?: string;
+  contactId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLDocumentTemplate {
+  id?: string;
+  locationId?: string;
+  name?: string;
+  type?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+// ============================================================
+// VOICE AI TYPES
+// ============================================================
+
+export interface GHLVoiceAIAgent {
+  id?: string;
+  locationId?: string;
+  name: string;
+  phone?: string;
+  voiceId?: string;
+  greeting?: string;
+  goal?: string;
+  instructions?: string;
+  status?: string;
+  knowledgeBaseIds?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLVoiceAIAction {
+  id?: string;
+  agentId?: string;
+  name?: string;
+  type?: string;
+  description?: string;
+  config?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLVoiceAICallLog {
+  id?: string;
+  agentId?: string;
+  contactId?: string;
+  phone?: string;
+  direction?: 'inbound' | 'outbound';
+  duration?: number;
+  status?: string;
+  recordingUrl?: string;
+  createdAt?: string;
+  [key: string]: any;
+}
