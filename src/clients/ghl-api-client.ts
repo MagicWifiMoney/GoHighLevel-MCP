@@ -7541,4 +7541,302 @@ export class GHLApiClient {
       throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
     }
   }
+
+  // ============================================================
+  // PHASE 2: SNAPSHOTS API METHODS (Agency Token)
+  // ============================================================
+
+  async listSnapshots(companyId?: string): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const params: any = {};
+      if (companyId) params.companyId = companyId;
+      const response: AxiosResponse = await client.get('/snapshots/', { params });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createSnapshotShareLink(data: {
+    snapshot_id: string;
+    share_type: string;
+    companyId?: string;
+    relationship_number?: string;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.post('/snapshots/share/link', data);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getSnapshotPushStatus(companyId?: string, queryParams?: any): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const params: any = { ...queryParams };
+      if (companyId) params.companyId = companyId;
+      const response: AxiosResponse = await client.get('/snapshots/snapshot-status', { params });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getLatestSnapshotPush(companyId?: string, locationId?: string): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const params: any = {};
+      if (companyId) params.companyId = companyId;
+      if (locationId) params.locationId = locationId;
+      const response: AxiosResponse = await client.get('/snapshots/snapshot-status/latest', { params });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // SAAS CONFIGURATOR API METHODS (Agency Token)
+  // ============================================================
+
+  async getSaaSLocations(companyId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.get(`/saas-api/public-api/locations/${companyId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async enableSaaSLocation(locationId: string, data?: {
+    companyId?: string;
+    planId?: string;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.post(`/saas-api/public-api/enable-saas/${locationId}`, data || {});
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getAgencyPlans(companyId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.get(`/saas-api/public-api/plans/${companyId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getSaaSSubscription(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.get(`/saas-api/public-api/location/${locationId}/subscription`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async bulkEnableSaaS(data: {
+    locationIds: string[];
+    companyId?: string;
+    planId?: string;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const client = this.getAgencyClient();
+      const response: AxiosResponse = await client.post('/saas-api/public-api/bulk-enable-saas', data);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // FUNNELS API METHODS (Sub-account Token)
+  // ============================================================
+
+  async listFunnels(locationId: string, params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const queryParams: any = { locationId };
+      if (params?.limit) queryParams.limit = params.limit;
+      if (params?.offset) queryParams.offset = params.offset;
+      const response: AxiosResponse = await this.axiosInstance.get('/funnels/funnel/list', { params: queryParams });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async listFunnelPages(locationId: string, params?: {
+    funnelId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const queryParams: any = { locationId };
+      if (params?.funnelId) queryParams.funnelId = params.funnelId;
+      if (params?.limit) queryParams.limit = params.limit;
+      if (params?.offset) queryParams.offset = params.offset;
+      const response: AxiosResponse = await this.axiosInstance.get('/funnels/page', { params: queryParams });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async countFunnelPages(locationId: string, funnelId?: string): Promise<GHLApiResponse<any>> {
+    try {
+      const params: any = { locationId };
+      if (funnelId) params.funnelId = funnelId;
+      const response: AxiosResponse = await this.axiosInstance.get('/funnels/page/count', { params });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createFunnelRedirect(locationId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const payload = { ...data, locationId };
+      const response: AxiosResponse = await this.axiosInstance.post('/funnels/lookup/redirect', payload);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async listFunnelRedirects(locationId: string, params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const queryParams: any = { locationId };
+      if (params?.limit) queryParams.limit = params.limit;
+      if (params?.offset) queryParams.offset = params.offset;
+      const response: AxiosResponse = await this.axiosInstance.get('/funnels/lookup/redirect/list', { params: queryParams });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateFunnelRedirect(redirectId: string, locationId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const payload = { ...data, locationId };
+      const response: AxiosResponse = await this.axiosInstance.patch(`/funnels/lookup/redirect/${redirectId}`, payload);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteFunnelRedirect(redirectId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/funnels/lookup/redirect/${redirectId}`, {
+        params: { locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // TRIGGER LINKS API METHODS (Sub-account Token)
+  // ============================================================
+
+  async searchTriggerLinks(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/links/', {
+        params: { locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async createTriggerLink(locationId: string, data: {
+    name: string;
+    redirectTo: string;
+  }): Promise<GHLApiResponse<any>> {
+    try {
+      const payload = { ...data, locationId };
+      const response: AxiosResponse = await this.axiosInstance.post('/links/', payload);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async updateTriggerLink(linkId: string, locationId: string, data: any): Promise<GHLApiResponse<any>> {
+    try {
+      const payload = { ...data, locationId };
+      const response: AxiosResponse = await this.axiosInstance.put(`/links/${linkId}`, payload);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async deleteTriggerLink(linkId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.delete(`/links/${linkId}`, {
+        params: { locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // CAMPAIGNS API METHODS (Sub-account Token)
+  // ============================================================
+
+  async listCampaigns(locationId: string, status?: string): Promise<GHLApiResponse<any>> {
+    try {
+      const params: any = { locationId };
+      if (status) params.status = status;
+      const response: AxiosResponse = await this.axiosInstance.get('/campaigns/', { params });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  async getCampaign(campaignId: string, locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/campaigns/${campaignId}`, {
+        params: { locationId }
+      });
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ============================================================
+  // PHONE SYSTEM API METHODS (Sub-account Token)
+  // ============================================================
+
+  async listPhoneNumbers(locationId: string): Promise<GHLApiResponse<any>> {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(`/phone-number/location/${locationId}`);
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
 }

@@ -44,6 +44,12 @@ import { KnowledgeBaseTools } from './tools/knowledge-base-tools.js';
 import { AgentStudioTools } from './tools/agent-studio-tools.js';
 import { DocumentTools } from './tools/document-tools.js';
 import { VoiceAITools } from './tools/voice-ai-tools.js';
+import { SnapshotTools } from './tools/snapshot-tools.js';
+import { SaaSTools } from './tools/saas-tools.js';
+import { FunnelTools } from './tools/funnel-tools.js';
+import { TriggerLinkTools } from './tools/trigger-link-tools.js';
+import { CampaignTools } from './tools/campaign-tools.js';
+import { PhoneSystemTools } from './tools/phone-system-tools.js';
 
 // Load environment variables
 dotenv.config();
@@ -83,6 +89,12 @@ class GHLMCPServer {
   private agentStudioTools: AgentStudioTools;
   private documentTools: DocumentTools;
   private voiceAITools: VoiceAITools;
+  private snapshotTools: SnapshotTools;
+  private saasTools: SaaSTools;
+  private funnelTools: FunnelTools;
+  private triggerLinkTools: TriggerLinkTools;
+  private campaignTools: CampaignTools;
+  private phoneSystemTools: PhoneSystemTools;
 
   constructor() {
     // Initialize MCP server with capabilities
@@ -131,6 +143,12 @@ class GHLMCPServer {
     this.agentStudioTools = new AgentStudioTools(this.ghlClient);
     this.documentTools = new DocumentTools(this.ghlClient);
     this.voiceAITools = new VoiceAITools(this.ghlClient);
+    this.snapshotTools = new SnapshotTools(this.ghlClient);
+    this.saasTools = new SaaSTools(this.ghlClient);
+    this.funnelTools = new FunnelTools(this.ghlClient);
+    this.triggerLinkTools = new TriggerLinkTools(this.ghlClient);
+    this.campaignTools = new CampaignTools(this.ghlClient);
+    this.phoneSystemTools = new PhoneSystemTools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupHandlers();
@@ -207,6 +225,12 @@ class GHLMCPServer {
         const agentStudioToolDefinitions = this.agentStudioTools.getToolDefinitions();
         const documentToolDefinitions = this.documentTools.getToolDefinitions();
         const voiceAIToolDefinitions = this.voiceAITools.getToolDefinitions();
+        const snapshotToolDefinitions = this.snapshotTools.getToolDefinitions();
+        const saasToolDefinitions = this.saasTools.getToolDefinitions();
+        const funnelToolDefinitions = this.funnelTools.getToolDefinitions();
+        const triggerLinkToolDefinitions = this.triggerLinkTools.getToolDefinitions();
+        const campaignToolDefinitions = this.campaignTools.getToolDefinitions();
+        const phoneSystemToolDefinitions = this.phoneSystemTools.getToolDefinitions();
 
         const allTools = [
           ...contactToolDefinitions,
@@ -237,7 +261,13 @@ class GHLMCPServer {
           ...knowledgeBaseToolDefinitions,
           ...agentStudioToolDefinitions,
           ...documentToolDefinitions,
-          ...voiceAIToolDefinitions
+          ...voiceAIToolDefinitions,
+          ...snapshotToolDefinitions,
+          ...saasToolDefinitions,
+          ...funnelToolDefinitions,
+          ...triggerLinkToolDefinitions,
+          ...campaignToolDefinitions,
+          ...phoneSystemToolDefinitions
         ];
         
         process.stderr.write(`[GHL MCP] Registered ${allTools.length} tools total:\n`);
@@ -270,6 +300,12 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${agentStudioToolDefinitions.length} agent studio tools\n`);
         process.stderr.write(`[GHL MCP] - ${documentToolDefinitions.length} document tools\n`);
         process.stderr.write(`[GHL MCP] - ${voiceAIToolDefinitions.length} voice AI tools\n`);
+        process.stderr.write(`[GHL MCP] - ${snapshotToolDefinitions.length} snapshot tools\n`);
+        process.stderr.write(`[GHL MCP] - ${saasToolDefinitions.length} SaaS tools\n`);
+        process.stderr.write(`[GHL MCP] - ${funnelToolDefinitions.length} funnel tools\n`);
+        process.stderr.write(`[GHL MCP] - ${triggerLinkToolDefinitions.length} trigger link tools\n`);
+        process.stderr.write(`[GHL MCP] - ${campaignToolDefinitions.length} campaign tools\n`);
+        process.stderr.write(`[GHL MCP] - ${phoneSystemToolDefinitions.length} phone system tools\n`);
         
         return {
           tools: allTools
@@ -352,6 +388,18 @@ class GHLMCPServer {
           result = await this.documentTools.executeTool(name, args || {});
         } else if (this.isVoiceAITool(name)) {
           result = await this.voiceAITools.executeTool(name, args || {});
+        } else if (this.isSnapshotTool(name)) {
+          result = await this.snapshotTools.executeTool(name, args || {});
+        } else if (this.isSaaSTool(name)) {
+          result = await this.saasTools.executeTool(name, args || {});
+        } else if (this.isFunnelTool(name)) {
+          result = await this.funnelTools.executeTool(name, args || {});
+        } else if (this.isTriggerLinkTool(name)) {
+          result = await this.triggerLinkTools.executeTool(name, args || {});
+        } else if (this.isCampaignTool(name)) {
+          result = await this.campaignTools.executeTool(name, args || {});
+        } else if (this.isPhoneSystemTool(name)) {
+          result = await this.phoneSystemTools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }
@@ -761,6 +809,30 @@ class GHLMCPServer {
    */
   private isVoiceAITool(toolName: string): boolean {
     return VoiceAITools.toolNames.includes(toolName);
+  }
+
+  private isSnapshotTool(toolName: string): boolean {
+    return SnapshotTools.toolNames.includes(toolName);
+  }
+
+  private isSaaSTool(toolName: string): boolean {
+    return SaaSTools.toolNames.includes(toolName);
+  }
+
+  private isFunnelTool(toolName: string): boolean {
+    return FunnelTools.toolNames.includes(toolName);
+  }
+
+  private isTriggerLinkTool(toolName: string): boolean {
+    return TriggerLinkTools.toolNames.includes(toolName);
+  }
+
+  private isCampaignTool(toolName: string): boolean {
+    return CampaignTools.toolNames.includes(toolName);
+  }
+
+  private isPhoneSystemTool(toolName: string): boolean {
+    return PhoneSystemTools.toolNames.includes(toolName);
   }
 
   /**

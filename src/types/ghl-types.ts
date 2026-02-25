@@ -6891,3 +6891,241 @@ export interface GHLVoiceAICallLog {
   createdAt?: string;
   [key: string]: any;
 }
+
+// ============================================================
+// PHASE 2: SNAPSHOTS, SAAS, FUNNELS, TRIGGER LINKS, CAMPAIGNS, PHONE SYSTEM
+// ============================================================
+
+// SNAPSHOT INTERFACES
+
+export interface GHLSnapshot {
+  id: string;
+  name?: string;
+  type?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLSnapshotListResponse {
+  snapshots?: GHLSnapshot[];
+  [key: string]: any;
+}
+
+export interface GHLSnapshotShareLinkRequest {
+  snapshot_id: string;
+  share_type: 'link' | 'permanent' | 'one_time';
+  relationship_number?: string;
+  companyId?: string;
+}
+
+export interface GHLSnapshotShareLinkResponse {
+  url?: string;
+  shareLink?: string;
+  [key: string]: any;
+}
+
+export interface GHLSnapshotPushStatusResponse {
+  data?: any[];
+  [key: string]: any;
+}
+
+export interface GHLLatestSnapshotPushResponse {
+  status?: string;
+  [key: string]: any;
+}
+
+// SAAS CONFIGURATOR INTERFACES
+
+export interface GHLSaaSLocation {
+  id?: string;
+  name?: string;
+  locationId?: string;
+  companyId?: string;
+  planId?: string;
+  status?: string;
+  [key: string]: any;
+}
+
+export interface GHLSaaSLocationsResponse {
+  data?: GHLSaaSLocation[];
+  locations?: GHLSaaSLocation[];
+  [key: string]: any;
+}
+
+export interface GHLSaaSPlan {
+  _id?: string;
+  name?: string;
+  description?: string;
+  amount?: number;
+  currency?: string;
+  interval?: string;
+  [key: string]: any;
+}
+
+export interface GHLSaaSPlansResponse {
+  data?: GHLSaaSPlan[];
+  plans?: GHLSaaSPlan[];
+  [key: string]: any;
+}
+
+export interface GHLSaaSSubscription {
+  locationId?: string;
+  planId?: string;
+  status?: string;
+  [key: string]: any;
+}
+
+export interface GHLSaaSSubscriptionResponse {
+  subscription?: GHLSaaSSubscription;
+  [key: string]: any;
+}
+
+export interface GHLEnableSaaSRequest {
+  locationId: string;
+  companyId?: string;
+  planId?: string;
+  [key: string]: any;
+}
+
+export interface GHLBulkEnableSaaSRequest {
+  locationIds: string[];
+  companyId?: string;
+  planId?: string;
+  [key: string]: any;
+}
+
+// FUNNEL INTERFACES
+
+export interface GHLFunnel {
+  id?: string;
+  name?: string;
+  locationId?: string;
+  steps?: any[];
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface GHLFunnelListResponse {
+  funnels?: GHLFunnel[];
+  count?: number;
+  total?: number;
+  [key: string]: any;
+}
+
+export interface GHLFunnelPage {
+  id?: string;
+  name?: string;
+  funnelId?: string;
+  locationId?: string;
+  url?: string;
+  path?: string;
+  [key: string]: any;
+}
+
+export interface GHLFunnelPageListResponse {
+  pages?: GHLFunnelPage[];
+  count?: number;
+  total?: number;
+  [key: string]: any;
+}
+
+export interface GHLFunnelPageCountResponse {
+  count?: number;
+  [key: string]: any;
+}
+
+export interface GHLFunnelRedirect {
+  id?: string;
+  target?: string;
+  action?: string;
+  domain?: string;
+  path?: string;
+  locationId?: string;
+  [key: string]: any;
+}
+
+export interface GHLFunnelRedirectListResponse {
+  redirects?: GHLFunnelRedirect[];
+  [key: string]: any;
+}
+
+export interface GHLCreateFunnelRedirectRequest {
+  target: string;
+  action: string;
+  domain?: string;
+  path?: string;
+  locationId?: string;
+  [key: string]: any;
+}
+
+export interface GHLUpdateFunnelRedirectRequest {
+  target?: string;
+  action?: string;
+  domain?: string;
+  path?: string;
+  [key: string]: any;
+}
+
+// TRIGGER LINK INTERFACES
+
+export interface GHLTriggerLink {
+  id?: string;
+  name?: string;
+  redirectTo?: string;
+  locationId?: string;
+  [key: string]: any;
+}
+
+export interface GHLTriggerLinkListResponse {
+  links?: GHLTriggerLink[];
+  [key: string]: any;
+}
+
+export interface GHLCreateTriggerLinkRequest {
+  name: string;
+  redirectTo: string;
+  locationId?: string;
+  [key: string]: any;
+}
+
+export interface GHLUpdateTriggerLinkRequest {
+  name?: string;
+  redirectTo?: string;
+  [key: string]: any;
+}
+
+// CAMPAIGN INTERFACES
+
+export interface GHLCampaignDetail {
+  id?: string;
+  name?: string;
+  status?: string;
+  locationId?: string;
+  [key: string]: any;
+}
+
+export interface GHLCampaignListResponse {
+  campaigns?: GHLCampaignDetail[];
+  [key: string]: any;
+}
+
+// PHONE SYSTEM INTERFACES
+
+export interface GHLPhoneNumber {
+  id?: string;
+  phoneNumber?: string;
+  locationId?: string;
+  name?: string;
+  status?: string;
+  type?: string;
+  [key: string]: any;
+}
+
+export interface GHLPhoneNumberListResponse {
+  data?: GHLPhoneNumber[];
+  phoneNumbers?: GHLPhoneNumber[];
+  [key: string]: any;
+}
